@@ -8,8 +8,8 @@ import (
 	"io/ioutil"
 	"log"
 
-	"github.com/elastic/go-elasticsearch"
-	"github.com/elastic/go-elasticsearch/esapi"
+	"github.com/elastic/go-elasticsearch/v8"
+	"github.com/elastic/go-elasticsearch/v8/esapi"
 )
 
 type ESCLIENT struct {
@@ -175,6 +175,24 @@ func (es *ESCLIENT) HandleESCount(index string, body *bytes.Buffer) int {
 		return int(count)
 	}
 	return 0
+}
+
+func (es *ESCLIENT) HandleESState(index string, field string) (*[]byte, error) {
+	res, err := es.Indices.Stats(
+		es.Indices.Stats.WithIndex(index),
+		es.Indices.Stats.WithMetric(field),
+	)
+	if err != nil {
+		return nil, err
+	}
+	if res.StatusCode == 200 {
+		result, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return nil, err
+		}
+		return &result, nil
+	}
+	return nil, errors.New("status code error")
 }
 
 func (es *ESCLIENT) IsHaveValue(index string, field string, value string) bool {
