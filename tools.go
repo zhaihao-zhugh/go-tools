@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"strings"
 	"time"
 
 	"golang.org/x/text/encoding/simplifiedchinese"
@@ -90,4 +91,24 @@ func ByteSliceToHexString(src []byte) (dest string) {
 
 func BytesCombine(pBytes ...[]byte) []byte {
 	return bytes.Join(pBytes, []byte(""))
+}
+
+func Ticker(t time.Duration, handler func()) {
+	timeTickerChan := time.Tick(t)
+	for {
+		handler()
+		<-timeTickerChan
+	}
+}
+
+func SplitString(s string, sep []rune) []string {
+	Split := func(r rune) bool {
+		for _, v := range sep {
+			if v == r {
+				return true
+			}
+		}
+		return false
+	}
+	return strings.FieldsFunc(s, Split)
 }
