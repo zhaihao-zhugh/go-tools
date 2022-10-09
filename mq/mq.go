@@ -212,7 +212,7 @@ func (c *Consumer) handelConnect() bool {
 	q, err := ch.QueueDeclare(
 		c.Config.Queue, // name
 		true,           // durable
-		false,          // delete when unused
+		true,           // delete when unused
 		false,          // exclusive 是否私有
 		false,          // no-wait
 		nil,            // arguments

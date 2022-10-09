@@ -105,14 +105,6 @@ func IsFileExit(path string) bool {
 	return true
 }
 
-func Ticker(t time.Duration, handler func()) {
-	timeTickerChan := time.Tick(t)
-	for {
-		handler()
-		<-timeTickerChan
-	}
-}
-
 func SplitString(s string, sep []rune) []string {
 	Split := func(r rune) bool {
 		for _, v := range sep {
@@ -123,4 +115,21 @@ func SplitString(s string, sep []rune) []string {
 		return false
 	}
 	return strings.FieldsFunc(s, Split)
+}
+
+func Ticker(t time.Duration, handler func()) {
+	timeTickerChan := time.Tick(t)
+	for {
+		handler()
+		<-timeTickerChan
+	}
+}
+
+func Timeout(t_c chan time.Duration, t time.Duration, handler func()) {
+	select {
+	case v := <-t_c:
+		go Timeout(t_c, v, handler)
+	case <-time.After(t):
+		handler()
+	}
 }
