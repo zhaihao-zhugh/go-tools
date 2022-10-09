@@ -135,7 +135,7 @@ func (p *Producer) handelConnect() bool {
 	q, err := ch.QueueDeclare(
 		p.Config.Queue, // name
 		true,           // durable
-		false,          // delete when unused
+		true,           // delete when unused
 		false,          // exclusive 是否私有
 		false,          // no-wait
 		nil,            // arguments
