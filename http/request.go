@@ -14,7 +14,7 @@ func Post(url string, param interface{}) (res *http.Response, err error) {
 	if err != nil {
 		return res, err
 	}
-	fmt.Println("post data:", data)
+	fmt.Println("post data:", string(data))
 	res, err = cli.Post(url, "application/json", bytes.NewBuffer(data))
 	if err != nil {
 		return res, err
