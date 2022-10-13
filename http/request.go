@@ -3,6 +3,7 @@ package http
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 )
@@ -13,6 +14,7 @@ func Post(url string, param interface{}) (res *http.Response, err error) {
 	if err != nil {
 		return res, err
 	}
+	fmt.Println("post data:", data)
 	res, err = cli.Post(url, "application/json", bytes.NewBuffer(data))
 	if err != nil {
 		return res, err
