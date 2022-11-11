@@ -57,6 +57,46 @@ func TimeFormate(origin_time string) string {
 
 	return default_str
 }
+func StringToTime(origin_time string) time.Time {
+	default_time := time.Now()
+	if origin_time == "" {
+		return time.Time{}
+	}
+
+	{
+		var parse_str_time time.Time
+		parse_str_time, err := time.ParseInLocation(time_layout, origin_time, time.Local)
+		if err == nil {
+			return parse_str_time
+		}
+	}
+
+	{
+		var parse_str_time time.Time
+		parse_str_time, err := time.ParseInLocation("20060102 15:04:05", origin_time, time.Local)
+		if err == nil {
+			return parse_str_time
+		}
+	}
+
+	{
+		var parse_str_time time.Time
+		parse_str_time, err := time.ParseInLocation("2006-01-02T15:04:05", origin_time, time.Local)
+		if err == nil {
+			return parse_str_time
+		}
+	}
+
+	{
+		var parse_str_time time.Time
+		parse_str_time, err := time.ParseInLocation(time.RFC3339, origin_time, time.Local)
+		if err == nil {
+			return parse_str_time
+		}
+	}
+
+	return default_time
+}
 
 func GbkToUtf8(s []byte) ([]byte, error) {
 	reader := transform.NewReader(bytes.NewReader(s), simplifiedchinese.GBK.NewDecoder())
