@@ -18,6 +18,7 @@ type ChannelConfig struct {
 	Exchange string `json:"exchange"`
 	Queue    string `json:"queue"`
 	Key      string `json:"key"`
+	Durable  bool   `json:"durable"`
 }
 
 type MQCLIENT struct {
@@ -121,7 +122,7 @@ func (p *Producer) handelConnect() bool {
 	err = ch.ExchangeDeclare(
 		p.Config.Exchange, // name
 		p.Config.Type,     // type
-		true,              // durable
+		p.Config.Durable,  // durable
 		false,             // auto-deleted
 		false,             // internal
 		false,             // no-wait
@@ -133,12 +134,12 @@ func (p *Producer) handelConnect() bool {
 	}
 
 	q, err := ch.QueueDeclare(
-		p.Config.Queue, // name
-		true,           // durable
-		true,           // delete when unused
-		false,          // exclusive 是否私有
-		false,          // no-wait
-		nil,            // arguments
+		p.Config.Queue,   // name
+		p.Config.Durable, // durable
+		true,             // delete when unused
+		false,            // exclusive 是否私有
+		false,            // no-wait
+		nil,              // arguments
 	)
 	if err != nil {
 		p.Logger.Printf(err.Error())
@@ -198,7 +199,7 @@ func (c *Consumer) handelConnect() bool {
 	err = ch.ExchangeDeclare(
 		c.Config.Exchange, // name
 		c.Config.Type,     // type
-		true,              // durable
+		c.Config.Durable,  // durable
 		false,             // auto-deleted
 		false,             // internal
 		false,             // no-wait
@@ -210,12 +211,12 @@ func (c *Consumer) handelConnect() bool {
 	}
 
 	q, err := ch.QueueDeclare(
-		c.Config.Queue, // name
-		true,           // durable
-		true,           // delete when unused
-		false,          // exclusive 是否私有
-		false,          // no-wait
-		nil,            // arguments
+		c.Config.Queue,   // name
+		c.Config.Durable, // durable
+		true,             // delete when unused
+		false,            // exclusive 是否私有
+		false,            // no-wait
+		nil,              // arguments
 	)
 	if err != nil {
 		c.Logger.Printf(err.Error())
