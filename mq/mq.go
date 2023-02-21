@@ -9,10 +9,6 @@ import (
 	"github.com/streadway/amqp"
 )
 
-type MQCONFIG struct {
-	Path string `json:"path"`
-}
-
 type ChannelConfig struct {
 	Type     string `json:"type"`
 	Exchange string `json:"exchange"`
@@ -57,14 +53,14 @@ const (
 	reconnectDelay = 15 * time.Second
 )
 
-func NewConnect(cfg MQCONFIG) *amqp.Connection {
-	conn, err := amqp.Dial(cfg.Path)
+func NewConnect(path string) *amqp.Connection {
+	conn, err := amqp.Dial(path)
 	if err != nil {
 		log.Printf("MQ Client error: %s", err.Error())
 		for {
 			time.Sleep(reconnectDelay)
 			log.Println("MQ Client reconnet")
-			conn, err = amqp.Dial(cfg.Path)
+			conn, err = amqp.Dial(path)
 			if err == nil {
 				break
 			}

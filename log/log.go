@@ -23,12 +23,10 @@ type LOGGER struct {
 }
 
 var level zapcore.Level
-var config *LOGCONFIG
 var l *zap.Logger
 
-func Init(cfg *LOGCONFIG) *LOGGER {
-	config = cfg
-	switch config.Level { // 初始化配置文件的Level
+func NewLogger(lever, prefix, director string, savetime int64) *LOGGER {
+	switch lever { // 初始化配置文件的Level
 	case "debug":
 		level = zap.DebugLevel
 	case "info":
@@ -50,9 +48,9 @@ func Init(cfg *LOGCONFIG) *LOGGER {
 	if level == zap.DebugLevel || level == zap.ErrorLevel {
 		//New 从提供的 zapcore.Core 和 Options 构造一个新的 Logger。如果传递的 zapcore.Core 为零，则它会回退到使用无操作实现。这是构建 Logger 最灵活的方式，但也是最冗长的。
 		//AddStacktrace 将 Logger 配置为记录处于或高于给定级别的所有消息的堆栈跟踪。
-		l = zap.New(getEncoderCore(), zap.AddStacktrace(level))
+		l = zap.New(getEncoderCore(director, savetime), zap.AddStacktrace(level))
 	} else {
-		l = zap.New(getEncoderCore())
+		l = zap.New(getEncoderCore(director, savetime))
 	}
 
 	// 记录行号
@@ -81,8 +79,8 @@ func getEncoderConfig() (config zapcore.EncoderConfig) {
 }
 
 // getEncoderCore 获取Encoder的zapcore.Core
-func getEncoderCore() (core zapcore.Core) {
-	writer, err := GetWriteSyncer() // 使用file-rotatelogs进行日志分割
+func getEncoderCore(path string, t int64) (core zapcore.Core) {
+	writer, err := GetWriteSyncer(path, t) // 使用file-rotatelogs进行日志分割
 	if err != nil {
 		fmt.Printf("Get Write Syncer Failed err:%v", err.Error())
 		return
@@ -96,12 +94,12 @@ func CustomTimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 	enc.AppendString(t.Format(config.Prefix + "2006/01/02 - 15:04:05"))
 }
 
-func GetWriteSyncer() (zapcore.WriteSyncer, error) {
+func GetWriteSyncer(p string, t int64) (zapcore.WriteSyncer, error) {
 	fileWriter, err := zaprotatelogs.New(
-		path.Join(config.Director, "%Y-%m-%d.log"), //日志的路径和文件名
+		path.Join(p, "%Y-%m-%d.log"), //日志的路径和文件名
 		// zaprotatelogs.WithLinkName(CONFIG.Zap.LinkName), // 生成软链，指向最新日志文件
-		zaprotatelogs.WithMaxAge(time.Duration(config.Savetime*24)*time.Hour), //保存日期的时间
-		zaprotatelogs.WithRotationTime(24*time.Hour),                          //每天分割一次日志
+		zaprotatelogs.WithMaxAge(time.Duration(t*24)*time.Hour), //保存日期的时间
+		zaprotatelogs.WithRotationTime(24*time.Hour),            //每天分割一次日志
 	)
 	return zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(fileWriter)), err
 }
