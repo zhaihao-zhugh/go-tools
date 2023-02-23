@@ -10,11 +10,11 @@ import (
 )
 
 type ChannelConfig struct {
-	Type     string `json:"type"`
-	Exchange string `json:"exchange"`
-	Queue    string `json:"queue"`
-	Key      string `json:"key"`
-	Durable  bool   `json:"durable"`
+	Type     string   `json:"type"`
+	Exchange string   `json:"exchange"`
+	Queue    string   `json:"queue"`
+	Key      []string `json:"key"`
+	Durable  bool     `json:"durable"`
 }
 
 type MQCLIENT struct {
@@ -218,17 +218,21 @@ func (c *Consumer) handelConnect() bool {
 		c.Logger.Printf(err.Error())
 		return false
 	}
-	err = ch.QueueBind(
-		q.Name,            // queue name
-		c.Config.Key,      // routing key
-		c.Config.Exchange, // exchange
-		false,             //	noWait
-		nil,
-	)
-	if err != nil {
-		c.Logger.Printf(err.Error())
-		return false
+
+	for _, v := range c.Config.Key {
+		err = ch.QueueBind(
+			q.Name,            // queue name
+			v,                 // routing key
+			c.Config.Exchange, // exchange
+			false,             //	noWait
+			nil,
+		)
+		if err != nil {
+			c.Logger.Printf(err.Error())
+			return false
+		}
 	}
+
 	//订阅消息，并不是把mq的消息直接写到msgs，不需要死循环订阅，订阅之后mq有消息就会往msgs里写
 	msgs, err := ch.Consume(
 		q.Name, // queue
