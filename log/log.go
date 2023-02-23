@@ -97,26 +97,26 @@ func GetWriteSyncer(p string, t int64) (zapcore.WriteSyncer, error) {
 	return zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(fileWriter)), err
 }
 
-func (l *zap.SugaredLogger) Info(args ...interface{}) {
-	l.Info(args...)
+func Info(args ...interface{}) {
+	logger.Info(args...)
 }
 
-func (l *zap.SugaredLogger) Infof(template string, args ...interface{}) {
-	l.Infof(template, args...)
+func Infof(template string, args ...interface{}) {
+	logger.Infof(template, args...)
 }
 
-func (l *zap.SugaredLogger) Error(args ...interface{}) {
-	l.Error(args...)
+func Error(args ...interface{}) {
+	logger.Error(args...)
 }
 
-func (l *zap.SugaredLogger) Errorf(template string, args ...interface{}) {
-	l.Errorf(template, args...)
+func Errorf(template string, args ...interface{}) {
+	logger.Errorf(template, args...)
 }
 
-func (l *zap.SugaredLogger) Debug(args ...interface{}) {
-	l.Debug(args...)
+func Debug(args ...interface{}) {
+	logger.Debug(args...)
 }
 
-func (l *zap.SugaredLogger) Debugf(template string, args ...interface{}) {
-	l.Debugf(template, args...)
+func Debugf(template string, args ...interface{}) {
+	logger.Debugf(template, args...)
 }
