@@ -1,4 +1,4 @@
-package log
+package logger
 
 import (
 	"fmt"
@@ -95,4 +95,28 @@ func GetWriteSyncer(p string, t int64) (zapcore.WriteSyncer, error) {
 		zaprotatelogs.WithRotationTime(24*time.Hour),            //每天分割一次日志
 	)
 	return zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(fileWriter)), err
+}
+
+func (l *zap.SugaredLogger) Info(args ...interface{}) {
+	l.Info(args...)
+}
+
+func (l *zap.SugaredLogger) Infof(template string, args ...interface{}) {
+	l.Infof(template, args...)
+}
+
+func (l *zap.SugaredLogger) Error(args ...interface{}) {
+	l.Error(args...)
+}
+
+func (l *zap.SugaredLogger) Errorf(template string, args ...interface{}) {
+	l.Errorf(template, args...)
+}
+
+func (l *zap.SugaredLogger) Debug(args ...interface{}) {
+	l.Debug(args...)
+}
+
+func (l *zap.SugaredLogger) Debugf(template string, args ...interface{}) {
+	l.Debugf(template, args...)
 }
