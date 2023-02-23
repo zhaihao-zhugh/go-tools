@@ -11,6 +11,8 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+type Logger interface{}
+
 var prefix string
 var log_level zapcore.Level
 
