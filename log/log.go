@@ -18,37 +18,30 @@ type LOGCONFIG struct {
 	Savetime int64  `json:"savetime" yaml:"savetime"`
 }
 
-type LOGGER struct {
-	*zap.Logger
-}
+var logger *zap.SugaredLogger
+var prefix string
+var log_level zapcore.Level
 
-var level zapcore.Level
-var l *zap.Logger
-
-func NewLogger(lever, prefix, director string, savetime int64) *LOGGER {
+func NewLogger(lever, pre, director string, savetime int64) {
+	var l *zap.Logger
+	prefix = pre
 	switch lever { // 初始化配置文件的Level
 	case "debug":
-		level = zap.DebugLevel
+		log_level = zap.DebugLevel
 	case "info":
-		level = zap.InfoLevel
+		log_level = zap.InfoLevel
 	case "warn":
-		level = zap.WarnLevel
+		log_level = zap.WarnLevel
 	case "error":
-		level = zap.ErrorLevel
-	case "dpanic":
-		level = zap.DPanicLevel
-	case "panic":
-		level = zap.PanicLevel
-	case "fatal":
-		level = zap.FatalLevel
+		log_level = zap.ErrorLevel
 	default:
-		level = zap.InfoLevel
+		log_level = zap.InfoLevel
 	}
 
-	if level == zap.DebugLevel || level == zap.ErrorLevel {
+	if log_level == zap.DebugLevel || log_level == zap.ErrorLevel {
 		//New 从提供的 zapcore.Core 和 Options 构造一个新的 Logger。如果传递的 zapcore.Core 为零，则它会回退到使用无操作实现。这是构建 Logger 最灵活的方式，但也是最冗长的。
 		//AddStacktrace 将 Logger 配置为记录处于或高于给定级别的所有消息的堆栈跟踪。
-		l = zap.New(getEncoderCore(director, savetime), zap.AddStacktrace(level))
+		l = zap.New(getEncoderCore(director, savetime), zap.AddStacktrace(log_level))
 	} else {
 		l = zap.New(getEncoderCore(director, savetime))
 	}
@@ -56,8 +49,8 @@ func NewLogger(lever, prefix, director string, savetime int64) *LOGGER {
 	// 记录行号
 	l = l.WithOptions(zap.AddCaller())
 
-	l.Info("logger init done...")
-	return &LOGGER{l}
+	logger = l.Sugar()
+	logger.Info("logger init done...")
 }
 
 // getEncoderConfig 获取zapcore.EncoderConfig
@@ -86,12 +79,12 @@ func getEncoderCore(path string, t int64) (core zapcore.Core) {
 		return
 	}
 	//NewCore 创建一个将日志写入 WriteSyncer 的 Core。
-	return zapcore.NewCore(zapcore.NewConsoleEncoder(getEncoderConfig()), writer, level)
+	return zapcore.NewCore(zapcore.NewConsoleEncoder(getEncoderConfig()), writer, log_level)
 }
 
 // 自定义日志输出时间格式
 func CustomTimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
-	enc.AppendString(t.Format(config.Prefix + "2006/01/02 - 15:04:05"))
+	enc.AppendString(t.Format(prefix + "2006/01/02 - 15:04:05"))
 }
 
 func GetWriteSyncer(p string, t int64) (zapcore.WriteSyncer, error) {

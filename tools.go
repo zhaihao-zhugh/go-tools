@@ -97,7 +97,6 @@ func StringToTime(origin_time string) time.Time {
 
 	return default_time
 }
-
 func GbkToUtf8(s []byte) ([]byte, error) {
 	reader := transform.NewReader(bytes.NewReader(s), simplifiedchinese.GBK.NewDecoder())
 	d, e := ioutil.ReadAll(reader)
