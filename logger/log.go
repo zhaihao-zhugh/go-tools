@@ -13,10 +13,11 @@ import (
 
 type Logger interface{}
 
+var logger *zap.SugaredLogger
 var prefix string
 var log_level zapcore.Level
 
-func NewLogger(lever, pre, director string, savetime int64) *zap.SugaredLogger {
+func NewLogger(lever, pre, director string, savetime int64) {
 	var l *zap.Logger
 	prefix = pre
 	switch lever { // 初始化配置文件的Level
@@ -41,9 +42,10 @@ func NewLogger(lever, pre, director string, savetime int64) *zap.SugaredLogger {
 	}
 
 	// 记录行号
-	l = l.WithOptions(zap.AddCaller())
-	l.Info("logger init done...")
-	return l.Sugar()
+	l = l.WithOptions(zap.AddCaller(), zap.AddCallerSkip(1))
+	logger = l.Sugar()
+	logger.Info("logger init done...")
+	// return l.Sugar()
 }
 
 // getEncoderConfig 获取zapcore.EncoderConfig
@@ -59,7 +61,7 @@ func getEncoderConfig() (config zapcore.EncoderConfig) {
 		EncodeLevel:    zapcore.LowercaseColorLevelEncoder,
 		EncodeTime:     CustomTimeEncoder,
 		EncodeDuration: zapcore.SecondsDurationEncoder,
-		EncodeCaller:   zapcore.FullCallerEncoder,
+		EncodeCaller:   zapcore.ShortCallerEncoder,
 	}
 	return config
 }
@@ -90,26 +92,26 @@ func GetWriteSyncer(p string, t int64) (zapcore.WriteSyncer, error) {
 	return zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(fileWriter)), err
 }
 
-// func Info(args ...interface{}) {
-// 	logger.Info(args...)
-// }
+func Info(args ...interface{}) {
+	logger.Info(args...)
+}
 
-// func Infof(template string, args ...interface{}) {
-// 	logger.Infof(template, args...)
-// }
+func Infof(template string, args ...interface{}) {
+	logger.Infof(template, args...)
+}
 
-// func Error(args ...interface{}) {
-// 	logger.Error(args...)
-// }
+func Error(args ...interface{}) {
+	logger.Error(args...)
+}
 
-// func Errorf(template string, args ...interface{}) {
-// 	logger.Errorf(template, args...)
-// }
+func Errorf(template string, args ...interface{}) {
+	logger.Errorf(template, args...)
+}
 
-// func Debug(args ...interface{}) {
-// 	logger.Debug(args...)
-// }
+func Debug(args ...interface{}) {
+	logger.Debug(args...)
+}
 
-// func Debugf(template string, args ...interface{}) {
-// 	logger.Debugf(template, args...)
-// }
+func Debugf(template string, args ...interface{}) {
+	logger.Debugf(template, args...)
+}
