@@ -1,8 +1,7 @@
 package mq
 
 import (
-	"bytes"
-	"encoding/gob"
+	"encoding/json"
 	"log"
 	"os"
 	"sync"
@@ -165,9 +164,7 @@ func (p *Producer) handelConnect() bool {
 }
 
 func (p *Producer) PublishMsg(data interface{}) error {
-	var buf bytes.Buffer
-	enc := gob.NewEncoder(&buf)
-	err := enc.Encode(data)
+	buf, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
@@ -179,7 +176,7 @@ func (p *Producer) PublishMsg(data interface{}) error {
 			false, //如果exchange在将消息route到queue(s)时发现对应的queue上没有消费者，那么这条消息不会放入队列中。当与消息routeKey关联的所有queue(一个或多个)都没有消费者时，该消息会通过basic.return方法返还给生产者。
 			amqp.Publishing{
 				ContentType: "text/plain",
-				Body:        buf.Bytes(),
+				Body:        buf,
 			})
 		if err != nil {
 			return err
@@ -189,9 +186,7 @@ func (p *Producer) PublishMsg(data interface{}) error {
 }
 
 func (p *Producer) PublishMsgWithKey(key string, data interface{}) error {
-	var buf bytes.Buffer
-	enc := gob.NewEncoder(&buf)
-	err := enc.Encode(data)
+	buf, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
@@ -202,7 +197,7 @@ func (p *Producer) PublishMsgWithKey(key string, data interface{}) error {
 		false, //如果exchange在将消息route到queue(s)时发现对应的queue上没有消费者，那么这条消息不会放入队列中。当与消息routeKey关联的所有queue(一个或多个)都没有消费者时，该消息会通过basic.return方法返还给生产者。
 		amqp.Publishing{
 			ContentType: "text/plain",
-			Body:        buf.Bytes(),
+			Body:        buf,
 		})
 	return err
 }
