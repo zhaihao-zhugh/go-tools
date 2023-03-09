@@ -1,6 +1,8 @@
 package mq
 
 import (
+	"bytes"
+	"encoding/gob"
 	"log"
 	"os"
 	"sync"
@@ -162,7 +164,13 @@ func (p *Producer) handelConnect() bool {
 	return true
 }
 
-func (p *Producer) PublishMsg(body *[]byte) error {
+func (p *Producer) PublishMsg(data interface{}) error {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	err := enc.Encode(data)
+	if err != nil {
+		return err
+	}
 	for _, v := range p.Config.Key {
 		err := p.Channel.Publish(
 			p.Config.Exchange,
@@ -171,7 +179,7 @@ func (p *Producer) PublishMsg(body *[]byte) error {
 			false, //如果exchange在将消息route到queue(s)时发现对应的queue上没有消费者，那么这条消息不会放入队列中。当与消息routeKey关联的所有queue(一个或多个)都没有消费者时，该消息会通过basic.return方法返还给生产者。
 			amqp.Publishing{
 				ContentType: "text/plain",
-				Body:        *body,
+				Body:        buf.Bytes(),
 			})
 		if err != nil {
 			return err
@@ -180,15 +188,21 @@ func (p *Producer) PublishMsg(body *[]byte) error {
 	return nil
 }
 
-func (p *Producer) PublishMsgWithKey(key string, body *[]byte) error {
-	err := p.Channel.Publish(
+func (p *Producer) PublishMsgWithKey(key string, data interface{}) error {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	err := enc.Encode(data)
+	if err != nil {
+		return err
+	}
+	err = p.Channel.Publish(
 		p.Config.Exchange,
 		key,
 		false, //mandatory：true：如果exchange根据自身类型和消息routeKey无法找到一个符合条件的queue，那么会调用basic.return方法将消息返还给生产者。false：出现上述情形broker会直接将消息扔掉
 		false, //如果exchange在将消息route到queue(s)时发现对应的queue上没有消费者，那么这条消息不会放入队列中。当与消息routeKey关联的所有queue(一个或多个)都没有消费者时，该消息会通过basic.return方法返还给生产者。
 		amqp.Publishing{
 			ContentType: "text/plain",
-			Body:        *body,
+			Body:        buf.Bytes(),
 		})
 	return err
 }
