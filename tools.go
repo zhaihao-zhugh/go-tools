@@ -170,3 +170,11 @@ func Timeout(t_c chan time.Duration, t time.Duration, handler func()) {
 		handler()
 	}
 }
+
+func BuilderString(str ...string) string {
+	var builder strings.Builder
+	for _, v := range str {
+		builder.WriteString(v)
+	}
+	return builder.String()
+}
