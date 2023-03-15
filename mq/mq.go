@@ -50,6 +50,11 @@ type PublishMsg struct {
 	Body     interface{} `json:"body"`
 }
 
+type MqMsg struct {
+	Action string      `json:"action"`
+	Data   interface{} `json:"data"`
+}
+
 const (
 	reconnectDelay = 15 * time.Second
 )
