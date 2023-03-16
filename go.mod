@@ -1,4 +1,4 @@
-module tools
+module github.com/zhaihao-zhugh/tools
 
 go 1.18
 
