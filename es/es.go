@@ -29,6 +29,19 @@ func NewConnect(host string) *ESCLIENT {
 	return &ESCLIENT{es}
 }
 
+func (es *ESCLIENT) HandleESDefine(index string, body *bytes.Buffer) error {
+	req := esapi.IndicesCreateRequest{
+		Index: index, // Index name
+		Body:  body,  // Document body
+	}
+
+	res, err := req.Do(context.Background(), es)
+	result, err := ioutil.ReadAll(res.Body)
+	log.Printf("HandleESDefine result: %s\n", result)
+	defer res.Body.Close()
+	return err
+}
+
 func (es *ESCLIENT) HandleESCreate(index string, body *bytes.Buffer, id string) error {
 	res, err := es.Index(
 		index,                        // Index name
