@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"io/ioutil"
 	"log"
 
@@ -29,7 +30,7 @@ func NewConnect(host string) *ESCLIENT {
 	return &ESCLIENT{es}
 }
 
-func (es *ESCLIENT) HandleESDefine(index string, body *bytes.Buffer) error {
+func (es *ESCLIENT) HandleESDefine(index string, body io.Reader) error {
 	req := esapi.IndicesCreateRequest{
 		Index: index, // Index name
 		Body:  body,  // Document body
