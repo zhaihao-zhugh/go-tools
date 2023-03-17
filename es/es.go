@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"time"
 
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
@@ -23,9 +24,12 @@ func NewConnect(host string) *ESCLIENT {
 			"http://" + host,
 		},
 	}
+client:
 	es, err := elasticsearch.NewClient(cfg)
 	if err != nil {
-		log.Fatalln(err.Error())
+		log.Println(err.Error())
+		time.Sleep(5 * time.Second)
+		goto client
 	}
 	return &ESCLIENT{es}
 }
@@ -35,7 +39,6 @@ func (es *ESCLIENT) HandleESDefine(index string, body io.Reader) error {
 		Index: index, // Index name
 		Body:  body,  // Document body
 	}
-
 	res, err := req.Do(context.Background(), es)
 	result, err := ioutil.ReadAll(res.Body)
 	log.Printf("HandleESDefine result: %s\n", result)
@@ -43,7 +46,7 @@ func (es *ESCLIENT) HandleESDefine(index string, body io.Reader) error {
 	return err
 }
 
-func (es *ESCLIENT) HandleESCreate(index string, body *bytes.Buffer, id string) error {
+func (es *ESCLIENT) HandleESCreate(index string, body io.Reader, id string) error {
 	res, err := es.Index(
 		index,                        // Index name
 		body,                         // Document body
@@ -56,7 +59,7 @@ func (es *ESCLIENT) HandleESCreate(index string, body *bytes.Buffer, id string) 
 	return err
 }
 
-func (es *ESCLIENT) HandleESSearch(index string, body *bytes.Buffer) ([]byte, error) {
+func (es *ESCLIENT) HandleESSearch(index string, body io.Reader) ([]byte, error) {
 	res, err := es.Search(
 		es.Search.WithContext(context.Background()),
 		es.Search.WithIndex(index),
@@ -75,7 +78,7 @@ func (es *ESCLIENT) HandleESSearch(index string, body *bytes.Buffer) ([]byte, er
 	return result, nil
 }
 
-func (es *ESCLIENT) HandleESUpdate(index string, doc_id string, body *bytes.Buffer) (bool, error) {
+func (es *ESCLIENT) HandleESUpdate(index string, doc_id string, body io.Reader) (bool, error) {
 	res, err := es.Update(
 		index,
 		doc_id,
@@ -93,7 +96,7 @@ func (es *ESCLIENT) HandleESUpdate(index string, doc_id string, body *bytes.Buff
 	return false, errors.New("es update fail")
 }
 
-func (es *ESCLIENT) HandleESUpdateByQuery(indexes []string, body *bytes.Buffer) (bool, error) {
+func (es *ESCLIENT) HandleESUpdateByQuery(indexes []string, body io.Reader) (bool, error) {
 	res, err := es.UpdateByQuery(
 		indexes,
 		es.UpdateByQuery.WithBody(body),
@@ -124,7 +127,7 @@ func (es *ESCLIENT) HandleESDeleteById(index string, doc_id string) (bool, error
 	return false, errors.New("es delete fail")
 }
 
-func (es *ESCLIENT) HandleESDeleteByQuery(indexes []string, body *bytes.Buffer) (bool, error) {
+func (es *ESCLIENT) HandleESDeleteByQuery(indexes []string, body io.Reader) (bool, error) {
 	res, err := es.DeleteByQuery(
 		indexes,
 		body,
@@ -156,7 +159,7 @@ func (es *ESCLIENT) HandleESGet(index string, doc_id string) ([]byte, error) {
 	return []byte{}, errors.New("no data")
 }
 
-func (es *ESCLIENT) HandleESCount(index string, body *bytes.Buffer) int {
+func (es *ESCLIENT) HandleESCount(index string, body io.Reader) int {
 	var res *esapi.Response
 	var err error
 	if body != nil {
