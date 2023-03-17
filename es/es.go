@@ -7,159 +7,187 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
-	"log"
-	"time"
 
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
 )
 
-type ESCLIENT struct {
-	*elasticsearch.Client
-}
+var es *elasticsearch.Client
 
-func NewConnect(host string) *ESCLIENT {
+func NewConnect(host []string) error {
 	cfg := elasticsearch.Config{
-		Addresses: []string{
-			"http://" + host,
-		},
+		Addresses: host,
 	}
-client:
-	es, err := elasticsearch.NewClient(cfg)
+	cli, err := elasticsearch.NewClient(cfg)
 	if err != nil {
-		log.Println(err.Error())
-		time.Sleep(5 * time.Second)
-		goto client
+		return err
 	}
-	return &ESCLIENT{es}
+	es = cli
+	return nil
 }
 
-func (es *ESCLIENT) HandleESDefine(index string, body io.Reader) error {
+func HandleESDefine(index string, body io.Reader) (result []byte, err error) {
 	req := esapi.IndicesCreateRequest{
 		Index: index, // Index name
 		Body:  body,  // Document body
 	}
-	res, err := req.Do(context.Background(), es)
-	result, err := ioutil.ReadAll(res.Body)
-	log.Printf("HandleESDefine result: %s\n", result)
+	res, e := req.Do(context.Background(), es)
+	if e != nil {
+		err = e
+		return
+	}
+	result, err = ioutil.ReadAll(res.Body)
 	defer res.Body.Close()
-	return err
+	return
 }
 
-func (es *ESCLIENT) HandleESCreate(index string, body io.Reader, id string) error {
-	res, err := es.Index(
+func HandleESCreate(index string, body io.Reader, id string) (result []byte, err error) {
+	res, e := es.Index(
 		index,                        // Index name
 		body,                         // Document body
 		es.Index.WithDocumentID(id),  // Document ID
 		es.Index.WithRefresh("true"), // Refresh
 	)
-	result, err := ioutil.ReadAll(res.Body)
-	log.Printf("es create result: %s\n", result)
+	if e != nil {
+		err = e
+		return
+	}
+	result, err = ioutil.ReadAll(res.Body)
 	defer res.Body.Close()
-	return err
+	return
 }
 
-func (es *ESCLIENT) HandleESSearch(index string, body io.Reader) ([]byte, error) {
-	res, err := es.Search(
+func HandleESSearch(index string, body io.Reader) (result []byte, err error) {
+	res, e := es.Search(
 		es.Search.WithContext(context.Background()),
 		es.Search.WithIndex(index),
 		es.Search.WithBody(body),
 		es.Search.WithTrackTotalHits(true),
 		es.Search.WithPretty(),
 	)
+	if e != nil {
+		err = e
+		return
+	}
+	result, err = ioutil.ReadAll(res.Body)
 	defer res.Body.Close()
-	if err != nil {
-		return []byte{}, err
-	}
-	result, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return []byte{}, err
-	}
-	return result, nil
+	return
 }
 
-func (es *ESCLIENT) HandleESUpdate(index string, doc_id string, body io.Reader) (bool, error) {
-	res, err := es.Update(
+func HandleESUpdate(index string, doc_id string, body io.Reader) (result []byte, err error) {
+	res, e := es.Update(
 		index,
 		doc_id,
 		body,
 		es.Update.WithRefresh(`true`),
 		es.Update.WithPretty(),
 	)
+	if e != nil {
+		err = e
+		return
+	}
+	if res.StatusCode != 200 {
+		err = errors.New("es update fail")
+		return
+	}
+	result, err = ioutil.ReadAll(res.Body)
 	defer res.Body.Close()
-	if err != nil {
-		return false, err
-	}
-	if res.StatusCode == 200 {
-		return true, err
-	}
-	return false, errors.New("es update fail")
+	return
 }
 
-func (es *ESCLIENT) HandleESUpdateByQuery(indexes []string, body io.Reader) (bool, error) {
-	res, err := es.UpdateByQuery(
+func HandleESUpdateByQuery(indexes []string, body io.Reader) (result []byte, err error) {
+	res, e := es.UpdateByQuery(
 		indexes,
 		es.UpdateByQuery.WithBody(body),
 		es.UpdateByQuery.WithRefresh(true),
 	)
+	if e != nil {
+		err = e
+		return
+	}
+	if res.StatusCode != 200 {
+		err = errors.New("es update fail")
+		return
+	}
+	result, err = ioutil.ReadAll(res.Body)
 	defer res.Body.Close()
-	if err != nil {
-		return false, err
-	}
-	if res.StatusCode == 200 {
-		return true, err
-	}
-	return false, errors.New("es update fail")
+	return
 }
 
-func (es *ESCLIENT) HandleESDeleteById(index string, doc_id string) (bool, error) {
-	res, err := es.Delete(
+func HandleESDeleteById(index string, doc_id string) (result []byte, err error) {
+	res, e := es.Delete(
 		index,
 		doc_id,
 	)
+	if e != nil {
+		err = e
+		return
+	}
+	if res.StatusCode != 200 {
+		err = errors.New("es delete fail")
+		return
+	}
+	result, err = ioutil.ReadAll(res.Body)
 	defer res.Body.Close()
-	if err != nil {
-		return false, err
-	}
-	if res.StatusCode == 200 {
-		return true, err
-	}
-	return false, errors.New("es delete fail")
+	return
 }
 
-func (es *ESCLIENT) HandleESDeleteByQuery(indexes []string, body io.Reader) (bool, error) {
-	res, err := es.DeleteByQuery(
+func HandleESDeleteByQuery(indexes []string, body io.Reader) (result []byte, err error) {
+	res, e := es.DeleteByQuery(
 		indexes,
 		body,
 	)
+	if e != nil {
+		err = e
+		return
+	}
+	if res.StatusCode != 200 {
+		err = errors.New("es delete fail")
+		return
+	}
+	result, err = ioutil.ReadAll(res.Body)
 	defer res.Body.Close()
-	if err != nil {
-		return false, err
-	}
-	if res.StatusCode == 200 {
-		return true, err
-	}
-	return false, errors.New("es delete fail")
+	return
 }
 
-func (es *ESCLIENT) HandleESGet(index string, doc_id string) ([]byte, error) {
-	res, err := es.Get(
+func HandleESGet(index string, doc_id string) (result []byte, err error) {
+	res, e := es.Get(
 		index,
 		doc_id,
 		es.Get.WithPretty(),
 	)
+	if e != nil {
+		err = e
+		return
+	}
+	if res.StatusCode != 200 {
+		err = errors.New("no data")
+		return
+	}
+	result, err = ioutil.ReadAll(res.Body)
 	defer res.Body.Close()
-	if err != nil {
-		return []byte{}, err
-	}
-	result, err := ioutil.ReadAll(res.Body)
-	if err == nil && res.StatusCode == 200 {
-		return result, nil
-	}
-	return []byte{}, errors.New("no data")
+	return
 }
 
-func (es *ESCLIENT) HandleESCount(index string, body io.Reader) int {
+func HandleESState(index string, field string) (result []byte, err error) {
+	res, e := es.Indices.Stats(
+		es.Indices.Stats.WithIndex(index),
+		es.Indices.Stats.WithMetric(field),
+	)
+	if e != nil {
+		err = e
+		return
+	}
+	if res.StatusCode != 200 {
+		err = errors.New("status code error")
+		return
+	}
+	result, err = ioutil.ReadAll(res.Body)
+	defer res.Body.Close()
+	return
+}
+
+func HandleESCount(index string, body io.Reader) int {
 	var res *esapi.Response
 	var err error
 	if body != nil {
@@ -176,12 +204,11 @@ func (es *ESCLIENT) HandleESCount(index string, body io.Reader) int {
 			es.Count.WithPretty(),
 		)
 	}
-
-	defer res.Body.Close()
 	if err != nil {
 		return 0
 	}
 	res_body, err := ioutil.ReadAll(res.Body)
+	defer res.Body.Close()
 	if err != nil {
 		return 0
 	}
@@ -194,25 +221,7 @@ func (es *ESCLIENT) HandleESCount(index string, body io.Reader) int {
 	return 0
 }
 
-func (es *ESCLIENT) HandleESState(index string, field string) (*[]byte, error) {
-	res, err := es.Indices.Stats(
-		es.Indices.Stats.WithIndex(index),
-		es.Indices.Stats.WithMetric(field),
-	)
-	if err != nil {
-		return nil, err
-	}
-	if res.StatusCode == 200 {
-		result, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			return nil, err
-		}
-		return &result, nil
-	}
-	return nil, errors.New("status code error")
-}
-
-func (es *ESCLIENT) IsHaveValue(index string, field string, value string) bool {
+func IsHaveValue(index string, field string, value string) bool {
 	req := map[string]interface{}{
 		"query": map[string]interface{}{
 			"match": map[string]interface{}{
@@ -220,13 +229,11 @@ func (es *ESCLIENT) IsHaveValue(index string, field string, value string) bool {
 			},
 		},
 	}
-
 	req_json, _ := json.Marshal(req)
 	body := bytes.NewBuffer(req_json)
-	count := es.HandleESCount(index, body)
+	count := HandleESCount(index, body)
 	if count > 0 {
 		return true
 	}
-
 	return false
 }
