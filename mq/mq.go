@@ -134,34 +134,6 @@ func (p *Producer) handelConnect() bool {
 		p.Logger.Printf(err.Error())
 		return false
 	}
-
-	q, err := ch.QueueDeclare(
-		p.Config.Queue,   // name
-		p.Config.Durable, // durable
-		true,             // delete when unused
-		false,            // exclusive 是否私有
-		false,            // no-wait
-		nil,              // arguments
-	)
-	if err != nil {
-		p.Logger.Printf(err.Error())
-		return false
-	}
-
-	for _, v := range p.Config.Key {
-		err = ch.QueueBind(
-			q.Name,            // queue name
-			v,                 // routing key
-			p.Config.Exchange, // exchange
-			false,             //	noWait
-			nil,
-		)
-		if err != nil {
-			p.Logger.Printf(err.Error())
-			return false
-		}
-	}
-
 	p.NotifyClose = make(chan *amqp.Error)
 	p.Channel = ch
 	p.Channel.NotifyClose(p.NotifyClose)
