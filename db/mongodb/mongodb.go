@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zhaihao-zhugh/tools/logger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -38,7 +37,6 @@ func Delete(collection string, filter map[string]interface{}) (interface{}, erro
 	if err != nil {
 		return nil, err
 	}
-	logger.Info(res)
 	return res.DeletedCount, nil
 }
 
