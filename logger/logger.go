@@ -52,7 +52,7 @@ func getEncoderConfig() (config zapcore.EncoderConfig) {
 		CallerKey:      "caller",
 		StacktraceKey:  config.StacktraceKey,
 		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.LowercaseColorLevelEncoder,
+		EncodeLevel:    zapcore.CapitalLevelEncoder,
 		EncodeTime:     CustomTimeEncoder,
 		EncodeDuration: zapcore.SecondsDurationEncoder,
 		EncodeCaller:   zapcore.ShortCallerEncoder,
